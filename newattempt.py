@@ -35,15 +35,17 @@ class Bunkr:
 
 
     def getUrls(self):
+        count = 0
         response = self.session.get(url = self.albumUrl).html.text
         response = response.split('\n')[-1]
         response = json.loads(response)['props']['pageProps']['album']['files']
         for item in response:
             url = self.session.get(url = f"{item['cdn']}/{item['name']}", allow_redirects = 3, timeout = self.timeout).url
             self.downloadFile(url)
+            count += 1
             # self.urls.append(url) 
 
-        # print(response)    
+        print(f"{count} files downloaded")    
 
     def downloadFile(self, url):
         try:
