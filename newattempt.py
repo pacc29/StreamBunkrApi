@@ -51,10 +51,10 @@ class Bunkr:
         try:
             name = url.split('/')[-1]
             print(f"Trying to download {name}")
-            # response = self.session.get(url = url, stream = True)
-            # with open(name, 'wb') as f:
-            #     for chunk in response.iter_content(chunk_size = self.chunk_size):
-            #         f.write(chunk)
+            response = self.session.get(url = url, stream = True)
+            with open(name, 'wb') as f:
+                for chunk in response.iter_content(chunk_size = self.chunk_size):
+                    f.write(chunk)
 
 
         except requests.exceptions.ConnectionError as e:
