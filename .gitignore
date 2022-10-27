@@ -1,3 +1,5 @@
 test.py
 *.mp4
+*.m4v
 *.txt
+*.json

@@ -13,10 +13,11 @@ class StreamBunkr:
         self.links = {}
 
     def getLinks(self):
-        
+        # print(self.albumLink)
         response = self.session.get(url = self.albumLink).html.text
         response = response.split('\n')[-1]
-        response = json.loads(response)['props']['pageProps']['files']
+        # print(response)
+        response = json.loads(response)['props']['pageProps']['album']['files']
         # print(response)
         for item in response:
             response = self.session.get(url = f"https://stream.bunkr.is/v/{item['name']}").html.text
@@ -33,10 +34,14 @@ class StreamBunkr:
 
     def directLinks(self, response):
         response = response.split("\n")[-1]
-        response = json.loads(response)['props']['pageProps']['file']
-        link = f"{response['mediafiles']}/{response['name']}"
-        self.links[response['name']] = link
-
+        print(response)
+        try: 
+            response = json.loads(response)['props']['pageProps']['file']
+            link = f"{response['mediafiles']}/{response['name']}"
+            self.links[response['name']] = link
+        except:
+            pass
+        
     def dlLinks(self):
         for key in self.links:
             print(f"Downloading file {key}")
@@ -56,6 +61,7 @@ class StreamBunkr:
     @classmethod
     def getAlbumUrl(cls, _filename):
         url = next(cls.parseData(_filename))
+        print(url)
         return cls(url)
 
     @staticmethod
@@ -65,10 +71,10 @@ class StreamBunkr:
                 yield line.strip('\n').split('=')[-1]
 
 
-# sb = StreamBunkr.getAlbumUrl('DownloadLink.txt')
-# sb.getLinks()
-# sb.dlLinks()
-
-sb = StreamBunkr()
-sb.DownloadFromDirectLinks('kittykum.txt')
+sb = StreamBunkr.getAlbumUrl('DownloadLink.txt')
+sb.getLinks()
 sb.dlLinks()
+
+# sb = StreamBunkr()
+# sb.DownloadFromDirectLinks('.txt')
+# sb.dlLinks()
