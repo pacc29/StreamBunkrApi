@@ -46,6 +46,7 @@ class Bunkr:
             except:
                 pass
         print(f"{count} files downloaded")    
+        print(self.failedDownload)
 
     def downloadFile(self, url):
         try:
