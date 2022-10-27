@@ -33,8 +33,8 @@ class StreamBunkr:
         print(self.links)
 
     def directLinks(self, response):
-        response = response.split("\n")[-1]
         print(response)
+        response = response.split("\n")[-1]
         try: 
             response = json.loads(response)['props']['pageProps']['file']
             link = f"{response['mediafiles']}/{response['name']}"
@@ -73,7 +73,7 @@ class StreamBunkr:
 
 sb = StreamBunkr.getAlbumUrl('DownloadLink.txt')
 sb.getLinks()
-sb.dlLinks()
+# sb.dlLinks()
 
 # sb = StreamBunkr()
 # sb.DownloadFromDirectLinks('.txt')

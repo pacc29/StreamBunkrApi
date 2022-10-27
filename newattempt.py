@@ -1,5 +1,5 @@
-from urllib import response
 from requests_html import HTMLSession
+from requests import Session
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import requests
@@ -7,7 +7,7 @@ import json
 
 class Bunkr:
 
-    chunk_size = 8388608
+    chunk_size = 10240
 
     def __init__(
         self,
@@ -17,7 +17,7 @@ class Bunkr:
         read = 15,
         timeout = 15
     ):
-        self.session = HTMLSession()
+        self.htmlSession = HTMLSession()
         self.albumUrl = albumUrl
         self.failedDownload = []
         self.timeout = timeout
@@ -30,32 +30,33 @@ class Bunkr:
             total = connect + read
         )
         adapter = HTTPAdapter(max_retries = retry)
-        self.session.mount('https://', adapter)
-        self.session.mount('http://', adapter)   
-
+        self.htmlSession.mount('https://', adapter); self.htmlSession.mount('http://', adapter)   
 
     def getUrls(self):
         count = 0
-        response = self.session.get(url = self.albumUrl).html.text
+        response = self.htmlSession.get(url = self.albumUrl).html.text
         response = response.split('\n')[-1]
         response = json.loads(response)['props']['pageProps']['album']['files']
         for item in response:
-            url = self.session.get(url = f"{item['cdn']}/{item['name']}", allow_redirects = 3, timeout = self.timeout).url
-            self.downloadFile(url)
+            url = self.htmlSession.get(url = f"{item['cdn']}/{item['name']}", allow_redirects = 3, timeout = self.timeout).url
+            directUrl = json.loads(self.htmlSession.get(url = url).html.text.split("\n")[-1])['props']['pageProps']['file']
+            self.downloadFile(f"{directUrl['mediafiles']}/{directUrl['name']}")
             count += 1
-            # self.urls.append(url) 
 
         print(f"{count} files downloaded")    
 
     def downloadFile(self, url):
         try:
             name = url.split('/')[-1]
-            print(f"Trying to download {name}")
-            response = self.session.get(url = url, stream = True)
-            with open(name, 'wb') as f:
-                for chunk in response.iter_content(chunk_size = self.chunk_size):
-                    f.write(chunk)
-
+            print(f"Trying to download {name}...  ")
+            response = self.htmlSession.get(url = url, stream = True, timeout = self.timeout, verify = True)
+            if(response.status_code == 200):
+                with open(name, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size = self.chunk_size):
+                        f.write(chunk)
+            else:
+                print(f"Error code: {response.status_code}")
+                self.failedDownload.append(url)
 
         except requests.exceptions.ConnectionError as e:
             self.failedDownload.append(url)
@@ -63,7 +64,8 @@ class Bunkr:
         except:
             self.failedDownload.append(url)
             print('Unknown error exception')
-
+        # pass
+        # print(url)
 
     @classmethod
     def getAlbumUrl(cls, fileName):
