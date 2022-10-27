@@ -38,18 +38,21 @@ class Bunkr:
         response = response.split('\n')[-1]
         response = json.loads(response)['props']['pageProps']['album']['files']
         for item in response:
-            url = self.htmlSession.get(url = f"{item['cdn']}/{item['name']}", allow_redirects = 3, timeout = self.timeout).url
-            directUrl = json.loads(self.htmlSession.get(url = url).html.text.split("\n")[-1])['props']['pageProps']['file']
-            self.downloadFile(f"{directUrl['mediafiles']}/{directUrl['name']}")
-            count += 1
-
+            try:
+                url = self.htmlSession.get(url = f"""{item['cdn']}/{item['name']}""", allow_redirects = 3, timeout = self.timeout).url
+                directUrl = json.loads(self.htmlSession.get(url = url).html.text.split("\n")[-1])['props']['pageProps']['file']
+                self.downloadFile(f"{directUrl['mediafiles']}/{directUrl['name']}")
+                count += 1
+            except:
+                pass
         print(f"{count} files downloaded")    
 
     def downloadFile(self, url):
         try:
             name = url.split('/')[-1]
             print(f"Trying to download {name}...  ")
-            response = self.htmlSession.get(url = url, stream = True, timeout = self.timeout, verify = True)
+            response = self.htmlSession.get(url = url, stream = True, timeout = self.timeout)
+            print(response.status_code)
             if(response.status_code == 200):
                 with open(name, 'wb') as f:
                     for chunk in response.iter_content(chunk_size = self.chunk_size):
@@ -57,15 +60,9 @@ class Bunkr:
             else:
                 print(f"Error code: {response.status_code}")
                 self.failedDownload.append(url)
-
-        except requests.exceptions.ConnectionError as e:
-            self.failedDownload.append(url)
-            print(e)
         except:
-            self.failedDownload.append(url)
             print('Unknown error exception')
-        # pass
-        # print(url)
+            self.failedDownload.append(url)
 
     @classmethod
     def getAlbumUrl(cls, fileName):
